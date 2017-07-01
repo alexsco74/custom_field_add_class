@@ -1,0 +1,243 @@
+<?php
+
+/**
+ * @file
+ * Field attr module hooks and main functionality.
+ */
+
+/**
+ * Implements hook_field_form_field_ui_field_edit_form_alter().
+ */
+function custom_field_add_class_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
+  if (in_array($form['#instance']['widget']['type'], custom_field_add_class_get_widget_types())) {
+
+    $form['instance']['custom_field_add_class_container'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Custom field attributes',
+      '#weight' => 5
+    );
+
+    $wr = &$form['instance']['custom_field_add_class_container'];
+
+    // title_display
+    $wr['custom_field_add_class_tit_dis'] = array(
+      '#type' => 'select',
+      '#title' => t('Title display'),
+      '#weight' => -11,
+      '#options' => array(
+        'before' => 'before',
+        'invisible' => 'invisible',
+        'after' => 'after',
+        'none' => 'none'
+      ),
+      '#default_value' => isset($form['#instance']['custom_field_add_class_container']['custom_field_add_class_tit_dis'])
+        ? $form['#instance']['custom_field_add_class_container']['custom_field_add_class_tit_dis']
+        : 'before',
+    );
+
+    $form['instance']['custom_field_add_class_container']['add_class'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Add class'),
+      '#description' => t('Addition class'),
+      '#weight' => -10,
+      '#default_value' => isset($form['#instance']['custom_field_add_class_container']['add_class']) ? $form['#instance']['custom_field_add_class_container']['add_class'] : '',
+    );
+    //add placeholder for options_select
+    $form['instance']['custom_field_add_class_container']['custom_field_add_class_placeholder'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Add placeholder for select'),
+      '#description' => t('Addition class'),
+      '#weight' => -9,
+      '#default_value' => isset($form['#instance']['custom_field_add_class_container']['custom_field_add_class_placeholder']) ? $form['#instance']['custom_field_add_class_container']['custom_field_add_class_placeholder'] : '',
+    );
+
+    //depends relation
+    $form['instance']['custom_field_add_class_container']['custom_field_add_class_data_depends_master'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Depends master'),
+      '#weight' => -8,
+      '#default_value' => isset($form['#instance']['custom_field_add_class_container']['custom_field_add_class_data_depends_master']) ? $form['#instance']['custom_field_add_class_container']['custom_field_add_class_data_depends_master'] : '',
+    );
+    $form['instance']['custom_field_add_class_container']['custom_field_add_class_data_depends_slave'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Depends slave'),
+      '#weight' => -7,
+      '#default_value' => isset($form['#instance']['custom_field_add_class_container']['custom_field_add_class_data_depends_slave']) ? $form['#instance']['custom_field_add_class_container']['custom_field_add_class_data_depends_slave'] : '',
+    );
+    // value
+    $form['instance']['custom_field_add_class_container']['custom_field_add_class_data_depends_value'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Depends value'),
+      '#weight' => -6,
+      '#default_value' => isset($form['#instance']['custom_field_add_class_container']['custom_field_add_class_data_depends_value']) ? $form['#instance']['custom_field_add_class_container']['custom_field_add_class_data_depends_value'] : '',
+    );
+    // value operator
+    $form['instance']['custom_field_add_class_container']['custom_field_add_class_data_depends_value_op'] = array(
+      '#type' => 'select',
+      '#title' => t('Depends value operator'),
+      '#weight' => -5,
+      '#options' => array(
+        '_none' => '-None-',
+        '_e' => t('Equally'),
+        '_ne' => t('Not equally'),
+        '_any' => t('Any')
+      ),
+      '#default_value' => isset($form['#instance']['custom_field_add_class_container']['custom_field_add_class_data_depends_value_op'])
+        ? $form['#instance']['custom_field_add_class_container']['custom_field_add_class_data_depends_value_op']
+        : '_none',
+    );
+  }
+}
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function custom_field_add_class_field_widget_form_alter(&$element, &$form_state, $context) {
+  if (in_array($context['instance']['widget']['type'], custom_field_add_class_get_widget_types())) {
+
+    // $context['instance']
+
+
+    // add class to element
+    if (!empty($context['instance']['custom_field_add_class_container'])) {
+
+      $element_name = custom_field_add_class_get_widgets($context['instance']['widget']['type']);
+      $instance = $context['instance']['custom_field_add_class_container'];
+
+
+      if (!empty($instance['add_class'])) {
+        if (!empty($element[$element_name])) {
+          $element[$element_name]['#attributes']['class'][] = check_plain($instance['add_class']);
+        }
+        else {
+          $element['#attributes']['class'][] = check_plain($instance['add_class']);
+        }
+
+      }
+
+
+      // select placeholder
+      if (!empty($instance['custom_field_add_class_placeholder'])) {
+        if (!empty($element['#options']['_none'])) {
+          $element['#options']['_none'] = check_plain($instance['custom_field_add_class_placeholder']);
+          $element['#attributes']['data-placeholder'] = '_none';
+          // add custom select placeholder title invisible
+          $element['#title_display'] = 'invisible';
+        }
+      }
+
+      // add depends to element
+      // master
+      if (!empty($instance['custom_field_add_class_data_depends_master'])) {
+        $attr_value = check_plain($instance['custom_field_add_class_data_depends_master']);
+        if (!empty($element[$element_name])) {
+          $element[$element_name]['#attributes']['data-dmaster'] = $attr_value;
+        }
+        else {
+          $element['#attributes']['data-dmaster'] = $attr_value;
+        }
+      }
+
+      // slave
+      if (!empty($instance['custom_field_add_class_data_depends_slave'])) {
+        $attr_value = check_plain($instance['custom_field_add_class_data_depends_slave']);
+        if (!empty($element[$element_name])) {
+          $element[$element_name]['#attributes']['data-dependsslave'] = $attr_value;
+        }
+        else {
+          $element['#attributes']['data-dependsslave'] = $attr_value;
+        }
+      }
+
+      // depends value
+      if (!empty($instance['custom_field_add_class_data_depends_value'])) {
+        $attr_value = check_plain($instance['custom_field_add_class_data_depends_value']);
+        if (!empty($element[$element_name])) {
+          $element[$element_name]['#attributes']['data-dval'] = $attr_value;
+        }
+        else {
+          $element['#attributes']['data-dval'] = $attr_value;
+        }
+      }
+
+      // depends value operator
+      if (!empty($instance['custom_field_add_class_data_depends_value_op'])) {
+        $attr_value = check_plain($instance['custom_field_add_class_data_depends_value_op']);
+        if($attr_value != '_none') {
+          if (!empty($element[$element_name])) {
+            $element[$element_name]['#attributes']['data-dvalop'] = $attr_value;
+          }
+          else {
+            $element['#attributes']['data-dvalop'] = $attr_value;
+          }
+        }
+      }
+
+      // title display
+      if (!empty($instance['custom_field_add_class_tit_dis'])) {
+        $attr_value = check_plain($instance['custom_field_add_class_tit_dis']);
+        if (!empty($element[$element_name])) {
+          $element[$element_name]['#title_display'] = $attr_value;
+        }
+        else {
+          $element['#title_display'] = $attr_value;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Returns information about field widgets from hook_custom_field_add_class_info().
+ *
+ * @param $widget_type
+ *   (optional) A widget type name. If omitted, all widget types will be
+ *   returned.
+ */
+function custom_field_add_class_get_widgets($widget_type = NULL) {
+  static $widgets = array();
+
+  if (empty($widgets)) {
+    $widgets = module_invoke_all('custom_field_add_class_info');
+  }
+
+  if (isset($widget_type)) {
+    return isset($widgets[$widget_type]) ? $widgets[$widget_type] : FALSE;
+  }
+
+  return $widgets;
+}
+
+/**
+ * Returns an array containing the names of all the
+ * placeholder available widgets.
+ */
+function custom_field_add_class_get_widget_types() {
+  $widgets = custom_field_add_class_get_widgets();
+  return array_keys($widgets);
+}
+
+/**
+ * Implements hook_custom_field_add_class_info().
+ */
+function custom_field_add_class_custom_field_add_class_info() {
+  return array(
+    'date_popup' => 'value',
+    'entityreference_autocomplete_tags' => 'root',
+    'entityreference_autocomplete' => 'root',
+    'link_field' => 'url',
+    'options_select' => '#options][_none',
+    'options_buttons' => 'root',
+    'options_onoff' => 'root',
+    'taxonomy_autocomplete' => 'value',
+    'text_textfield' => 'value',
+    'text_textarea' => 'value',
+    'text_textarea_with_summary' => 'summary',
+    'number' => 'value',
+    'email_textfield' => 'email',
+  );
+}
+
+//function custom_field_add_class_preprocess_form_element(&$var){
+//    //$var['element']['#title_display'] = 'invisible';
+//}

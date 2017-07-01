@@ -1,0 +1,6 @@
+name = Custom field add class
+description = Provides custom field add class
+package = Fields
+core = 7.x
+
+dependencies[] = field
